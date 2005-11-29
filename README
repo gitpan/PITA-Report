@@ -1,0 +1,105 @@
+NAME
+    PITA::Report - Create, load, save and manipulate XML PITA reports
+
+STATUS
+    This is an experimental release for demonstration purposes only.
+
+    Please note the .xsd schema file may not install correctly as yet.
+
+SYNOPSIS
+      # Create a new empty report file
+      my $report = PITA::Report->new;
+  
+      # Load an existing report
+      my $report = PITA::Report->new( 'filename.pita' );
+
+DESCRIPTION
+    The Perl Image-based Testing Architecture (PITA) is designed to provide
+    a highly modular and flexible set of components for doing testing of
+    Perl distributions.
+
+    Within PITA, the PITA::Report module provides the primary method of
+    reporting the results of installation attempts.
+
+    The PITA::Report class itself provides a way to create a set of testing
+    results, and then store (and later recover) these results as you wish to
+    a file.
+
+    A single PITA report file consists of structured XML that can be
+    validated against a known schema, while storing a large amount of
+    testing data without any ambiguity or the edge cases you may find in a
+    YAML, email or text-file file.
+
+    The ability to take testing results from another arbitrary user and
+    validate them also makes implementing a parser very simple, and thus
+    allows the creation of aggregators and processing systems without undue
+    thoughts about the report files themselves.
+
+METHODS
+new
+      # Create a new (empty) report file
+      $empty = PITA::Report->new;
+  
+      # Load an existing file
+      $report = PITA::Report->new( 'filename.pita' );
+      $report = PITA::Report->new( $filehandle     );
+
+    The "new" constructor takes a file name or handle and parses it to
+    create a new "PITA::Report" object.
+
+    If passed a file handle object, it must be seekable (an IO::Seekable
+    subclass) as the file will need to be read twice. The first pass
+    validates the file against the schema, and the second populates the
+    object with PITA::Report::Install reports.
+
+    If passed no param, it creates a new empty report, ready for you to fill
+    with PITA::Report::Install objects you will generate yourself.
+
+    Returns a new "PITA::Report" object, or dies on error (most often due to
+    problems validating an incorrect file).
+
+  validate
+      # Validate a file without loading it
+      PITA::Report->validate( 'filename.pita' );
+      PITA::Report->validate( $filehandle     );
+
+    The "validate" static method provides standalone validation of a file or
+    file handle, without creating a "PITA::Report" object.
+
+    Returns true, or dies if it fails to validate the file or file handle.
+
+  installs
+    The "installs" method returns all of the PITA::Report::Install objects
+    from the "PITA::Report" as a list.
+
+  add_install
+      # Add a new install object to the report
+      $report->add_install( $install );
+
+    All "PITA::Report" files can contain more than one install report.
+
+    The "add_install" method takes a single PITA::Report::Install object as
+    a parameter and adds it to the "PITA::Report" object.
+
+SUPPORT
+    Bugs should be reported via the CPAN bug tracker at
+
+    <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PITA-Report>
+
+    For other issues, contact the author.
+
+AUTHOR
+    Adam Kennedy <cpan@ali.as>, <http://ali.as/>
+
+SEE ALSO
+    The Perl Image-based Testing Architecture (<http://ali.as/pita/>)
+
+COPYRIGHT
+    Copyright 2005 Adam Kennedy. All rights reserved.
+
+    This program is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
+    The full text of the license can be found in the LICENSE file included
+    with this module.
+
