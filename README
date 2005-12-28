@@ -1,5 +1,5 @@
 NAME
-    PITA::Report - Create, load, save and manipulate XML PITA reports
+    PITA::Report - Create, load, save and manipulate PITA-XML reports
 
 STATUS
     This is an experimental release for demonstration purposes only.
@@ -11,12 +11,12 @@ SYNOPSIS
       my $report = PITA::Report->new;
   
       # Load an existing report
-      my $report = PITA::Report->new( 'filename.pita' );
+      my $report = PITA::Report->new('filename.pita');
 
 DESCRIPTION
-    The Perl Image-based Testing Architecture (PITA) is designed to provide
-    a highly modular and flexible set of components for doing testing of
-    Perl distributions.
+    The Perl Image Testing Architecture (PITA) is designed to provide a
+    highly modular and flexible set of components for doing testing of Perl
+    distributions.
 
     Within PITA, the PITA::Report module provides the primary method of
     reporting the results of installation attempts.
@@ -68,10 +68,6 @@ new
 
     Returns true, or dies if it fails to validate the file or file handle.
 
-  installs
-    The "installs" method returns all of the PITA::Report::Install objects
-    from the "PITA::Report" as a list.
-
   add_install
       # Add a new install object to the report
       $report->add_install( $install );
@@ -80,6 +76,23 @@ new
 
     The "add_install" method takes a single PITA::Report::Install object as
     a parameter and adds it to the "PITA::Report" object.
+
+  installs
+    The "installs" method returns all of the PITA::Report::Install objects
+    from the "PITA::Report" as a list.
+
+  write
+      my $output = '';
+      $report->write( \$output        );
+      $report->write( 'filename.pita' );
+
+    The "write" method is used to save the report out to a named file.
+
+    It takes a single parameter, which can be either an XML SAX Handler (any
+    object that "isa" XML::SAX::Base) or any value that is legal to pass as
+    the "Output" parameter to XML::SAX::Writer's "new" constructor.
+
+    Returns true when the file is written, or dies on error.
 
 SUPPORT
     Bugs should be reported via the CPAN bug tracker at

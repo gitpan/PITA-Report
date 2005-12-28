@@ -4,7 +4,7 @@ package PITA::Report;
 
 =head1 NAME
 
-PITA::Report - Create, load, save and manipulate XML PITA reports
+PITA::Report - Create, load, save and manipulate PITA-XML reports
 
 =head1 STATUS
 
@@ -18,11 +18,11 @@ B<Please note the .xsd schema file may not install correctly as yet.>
   my $report = PITA::Report->new;
   
   # Load an existing report
-  my $report = PITA::Report->new( 'filename.pita' );
+  my $report = PITA::Report->new('filename.pita');
 
 =head1 DESCRIPTION
 
-The Perl Image-based Testing Architecture (PITA) is designed to provide a
+The Perl Image Testing Architecture (PITA) is designed to provide a
 highly modular and flexible set of components for doing testing of Perl
 distributions.
 
@@ -47,30 +47,44 @@ the report files themselves.
 
 =cut
 
+use 5.005;
 use strict;
-use Carp                       ();
-use Params::Util               ':ALL';
-use IO::File                   ();
-use File::Flock                ();
-use XML::SAX::ParserFactory    ();
-use XML::Validator::Schema     ();
-use PITA::Report::Platform     ();
-use PITA::Report::Distribution ();
-use PITA::Report::Install      ();
-use PITA::Report::SAXParser    ();
-use PITA::Report::SAXDriver    ();
+use Carp                    ();
+use Params::Util            ':ALL';
+use IO::File                ();
+use IO::String              ();
+use File::Flock             ();
+use File::ShareDir          ();
+use XML::SAX::ParserFactory ();
+use XML::Validator::Schema  ();
+use PITA::Report::Install   ();
+use PITA::Report::Request   ();
+use PITA::Report::Platform  ();
+use PITA::Report::Command   ();
+use PITA::Report::Test      ();
+use PITA::Report::SAXParser ();
+use PITA::Report::SAXDriver ();
 
 use vars qw{$VERSION $SCHEMA};
 BEGIN {
-	$VERSION = '0.01_01';
+	$VERSION = '0.02';
 }
 
-# Locate the Schema at use-time (instead of compile-time)
-$SCHEMA = $INC{'PITA/Report.pm'};
-$SCHEMA =~ s/pm$/xsd/;
-unless ( -f $SCHEMA and -r _ ) {
-	Carp::croak("Cannot locate XML Schema. PITA::Report load failed");
+# Temporary Hack:
+# IO::String looks like a duck, but we need it to be a real duck. So lets
+# make it a duck if it didn't turn into a duck while we weren't looking.
+unless ( @IO::String::ISA ) {
+	@IO::String::ISA = qw{IO::Handle IO::Seekable};
 }
+
+# The XML Schema File
+# Locate the Schema at use-time (instead of compile-time)
+$SCHEMA = File::ShareDir::dist_file('PITA-Report', 'PITA-Report.xsd');
+
+# While in development, use a version-specific namespace.
+# In theory, this ensures documents are only truly valid with the
+# version they were created with.
+use constant XMLNS => "http://ali.as/xml/schema/pita-xml/$VERSION";
 
 
 
@@ -116,8 +130,8 @@ sub new {
 	return $self unless @_;
 
 	# Validate the document
-	my $fh = $self->_fh(shift);
-	$class->validate( $fh );
+	my $fh = $self->_FH(shift);
+	# $class->validate( $fh );
 
 	# Reset the file handle for the next pass
 	$fh->seek( 0, 0 ) or Carp::croak(
@@ -150,7 +164,7 @@ Returns true, or dies if it fails to validate the file or file handle.
 
 sub validate {
 	my $class = shift;
-	my $fh    = $class->_fh(shift);
+	my $fh    = $class->_FH(shift);
 
 	# Create the validator
 	my $parser = XML::SAX::ParserFactory->parser(
@@ -163,44 +177,6 @@ sub validate {
 	$parser->parse_file( $fh );
 
 	1;
-}
-
-sub _fh {
-	my ($class, $file) = @_;
-	if ( _INSTANCE($file, 'IO::Seekable') ) {
-		# Reset the file handle
-		$file->seek( 0, 0 ) or Carp::croak(
-			'Failed to reset file handle (seek to 0)',
-			);
-		return $file;
-	}
-	if ( _INSTANCE($file, 'IO::Handle') ) {
-		Carp::croak('PITA::Report requires a seekable (IO::Seekable) handle');
-	}
-	unless ( defined $file and ! ref $file and length $file ) {
-		Carp::croak('Did not provide a file name or handle');
-	}
-	unless ( $file and -f $file and -r _ ) {
-		Carp::croak('Did not provide a readable file name');
-	}
-	my $fh = IO::File->new( $file );
-	unless ( $fh ) {
-		 Carp::croak("Failed to open PITA::Report file '$file'");
-	}
-	$fh;
-}
-
-=pod
-
-=head2 installs
-
-The C<installs> method returns all of the L<PITA::Report::Install> objects
-from the C<PITA::Report> as a list.
-
-=cut
-
-sub installs {
-	return (@{$_[0]->{installs}});
 }
 
 =pod
@@ -226,6 +202,94 @@ sub add_install {
 	push @{$self->{installs}}, $install;
 
 	1;
+}
+
+=pod
+
+=head2 installs
+
+The C<installs> method returns all of the L<PITA::Report::Install> objects
+from the C<PITA::Report> as a list.
+
+=cut
+
+sub installs {
+	return (@{$_[0]->{installs}});
+}
+
+=pod
+
+=head2 write
+
+  my $output = '';
+  $report->write( \$output        );
+  $report->write( 'filename.pita' );
+
+The C<write> method is used to save the report out to a named file.
+
+It takes a single parameter, which can be either an XML SAX Handler
+(any object that C<isa> L<XML::SAX::Base>) or any value that is
+legal to pass as the C<Output> parameter to L<XML::SAX::Writer>'s
+C<new> constructor.
+
+Returns true when the file is written, or dies on error.
+
+=cut
+
+sub write {
+	my $self   = shift;
+
+	# Prepate the driver params
+	my @params = _INSTANCE($_[0], 'XML::SAX::Base')
+		? ( Handler => shift )
+		: defined($_[0])
+			? ( Output  => shift )
+			: Carp::croak("Did not provide an output destination to ->write");
+
+	# Create the SAX Driver
+	my $driver = PITA::Report::SAXDriver->new( @params )
+		or die("Failed to create SAXDriver for report");
+
+	# Parse ourself with the driver to driver the writing
+	# of the output.
+	$driver->parse( $self );
+
+	1;
+}
+
+
+
+
+
+#####################################################################
+# Support Methods
+
+sub _FH {
+	my ($class, $file) = @_;
+	if ( _SCALAR($file) ) {
+		$file = IO::String->new( $file );
+	}
+	if ( _INSTANCE($file, 'IO::Seekable') ) {
+		if ( _INSTANCE($file, 'IO::Seekable') or $file->can('seek') ) {
+			# Reset the file handle
+			$file->seek( 0, 0 ) or Carp::croak(
+				'Failed to reset file handle (seek to 0)',
+				);
+			return $file;
+		}
+		Carp::croak('PITA::Report requires a seekable handle');
+	}
+	unless ( defined $file and ! ref $file and length $file ) {
+		Carp::croak('Did not provide a file name or handle');
+	}
+	unless ( $file and -f $file and -r _ ) {
+		Carp::croak('Did not provide a readable file name');
+	}
+	my $fh = IO::File->new( $file );
+	unless ( $fh ) {
+		 Carp::croak("Failed to open PITA::Report file '$file'");
+	}
+	$fh;
 }
 
 1;
