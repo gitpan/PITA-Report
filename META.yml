@@ -1,26 +1,27 @@
-name: PITA-Report
-version: 0.02
-abstract: Create, load, save and manipulate PITA-XML reports
-author: Adam Kennedy <cpan@ali.as>, L<http://ali.as/>
-license: perl
-distribution_type: module
+abstract: 'Create, load, save and manipulate PITA-XML reports'
+author: 'Adam Kennedy <cpan@ali.as>, L<http://ali.as/>'
 build_requires:
   File::Spec: 0.80
   Test::More: 0.47
-requires:
-  perl: 5.005
-  Carp: 0
-  IO::Handle: 0
-  IO::Seekable: 0
-  IO::File: 0
-  IO::String: 1.06
-  File::Flock: 101.060501
-  Params::Util: 0.07
-  File::ShareDir: 0.02
-  XML::SAX::Writer: 0.43
-  XML::SAX::ParserFactory: 0.13
-  XML::Validator::Schema: 1.08
+distribution_type: module
+generated_by: Module::Install version 0.50
+license: perl
+name: PITA-Report
 no_index:
   directory:
     - inc
-generated_by: Module::Install version 0.45
+    - t
+requires:
+  Carp: 0
+  File::Flock: 101.060501
+  File::ShareDir: 0.02
+  IO::File: 0
+  IO::Handle: 0
+  IO::Seekable: 0
+  IO::String: 1.06
+  Params::Util: 0.07
+  XML::SAX::ParserFactory: 0.13
+  XML::SAX::Writer: 0.43
+  XML::Validator::Schema: 1.08
+  perl: 5.005
+version: 0.04

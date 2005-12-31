@@ -58,4 +58,5 @@ t/10_sample.t
 t/10_single.pita
 t/11_saxdriver.t
 t/12_roundtrip.t
+t/13_configtiny.t
 t/99_pod.t

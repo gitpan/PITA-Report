@@ -6,7 +6,7 @@ use strict;
 use Cwd                 ();
 use ExtUtils::MakeMaker ();
 
-#line 222
+#line 221
 
 # special map on pre-defined feature sets
 my %FeatureMap = (
@@ -553,7 +553,8 @@ sub _can_write {
     if (
         eval '$>' and lc(`sudo -V`) =~ /version/ and _prompt(
             qq(
-==> Should we try to re-execute the autoinstall process with 'sudo'?), 'y'
+==> Should we try to re-execute the autoinstall process with 'sudo'?),
+            ((-t STDIN) ? 'y' : 'n')
         ) =~ /^[Yy]/
       )
     {
