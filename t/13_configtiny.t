@@ -47,7 +47,7 @@ sub test_request {
 }
 
 SKIP: {
-	skip("Config::Tiny is not installed", 5) if $@;
+	skip("Config::Tiny is not installed", 10) if $@;
 
 	# Test the basic request object
 	my $request1 = PITA::Report::Request->new(

@@ -1,5 +1,10 @@
 Revision history for Perl extension PITA::Report
 
+0.07    Mon  2 Jan 2005
+	- Added the missing Class::Autouse dependency
+	- 13_configtiny.t failed without Config::Tiny
+	  (skipped wrong number of tests)
+
 0.06    Mon  2 Jan 2005
 	- Fixed a bug in the distname param-check regex
 

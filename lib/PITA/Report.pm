@@ -67,7 +67,7 @@ use PITA::Report::SAXDriver ();
 
 use vars qw{$VERSION $SCHEMA};
 BEGIN {
-	$VERSION = '0.06';
+	$VERSION = '0.07';
 }
 
 # Temporary Hack:

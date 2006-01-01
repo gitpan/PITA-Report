@@ -13,6 +13,7 @@ no_index:
     - t
 requires:
   Carp: 0
+  Class::Autouse: 1.23
   File::Flock: 101.060501
   File::ShareDir: 0.02
   IO::File: 0
@@ -24,4 +25,4 @@ requires:
   XML::SAX::Writer: 0.43
   XML::Validator::Schema: 1.08
   perl: 5.005
-version: 0.06
+version: 0.07
