@@ -1,5 +1,8 @@
 Revision history for Perl extension PITA::Report
 
+0.06    Mon  2 Jan 2005
+	- Fixed a bug in the distname param-check regex
+
 0.05    Sun  1 Jan 2005
 	- More flexibility for the stdout and stderr params to Command and Test
 	- Fixed some documentation mistakes

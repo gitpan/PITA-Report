@@ -41,7 +41,7 @@ use Carp ();
 
 use vars qw{$VERSION %SCHEMES};
 BEGIN {
-	$VERSION = '0.05';
+	$VERSION = '0.06';
 
 	# The list of supported schemes
 	%SCHEMES = (
@@ -91,7 +91,7 @@ sub _init {
 	unless ( 
 		defined $distname and ! ref $distname
 		and
-		$distname =~ /^[a-z]+(?:\-[a-z]+)+$/is
+		$distname =~ /^[a-z]\w*(?:\-[a-z]\w*)+$/is
 	) {
 		Carp::croak('Invalid distname');
 	}
